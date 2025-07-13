@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KEYBIND COIN</title>
+    <style>
+        :root {
+            --primary: #00ffaa;
+            --secondary: #0055ff;
+            --bg: #0a0a0a;
+            --text: #e0e0e0;
+            --cursor: #00ffaa;
+            --highlight: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        #terminal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-bottom: 1rem;
+        }
+        
+        #input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        
+        #prompt {
+            color: var(--primary);
+            margin-right: 0.5rem;
+        }
+        
+        #command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            caret-color: var(--cursor);
+        }
+        
+        .command {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .response {
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1rem;
+            background-color: var(--cursor);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        #keyboard-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 19px, var(--text) 20px),
+                repeating-linear-gradient(90deg, transparent, transparent 19px, var(--text) 20px);
+        }
+        
+        #ghost-hands {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            font-size: 2rem;
+            color: var(--primary);
+        }
+        
+        .bind-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(10, 10, 10, 0.9);
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            width: 300px;
+            height: 300px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 2rem;
+        }
+        
+        .bind-menu-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .bind-option {
+            color: var(--text);
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .bind-option:hover {
+            color: var(--highlight);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Effects */
+        .rotate-effect {
+            animation: rotate 1s ease;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(180deg); }
+        }
+        
+        .silence-mode {
+            filter: grayscale(100%);
+        }
+        
+        .dark-explosion {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--primary) 0%, var(--bg) 70%);
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .meme-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+        
+        .geometry-warp {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, var(--bg) 25%, transparent 25%) -50px -50px,
+                linear-gradient(-45deg, var(--bg) 25%, transparent 25%) -50px -50px,
+                linear-gradient(45deg, transparent 75%, var(--bg) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--bg) 75%);
+            background-size: 100px 100px;
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+        
+        /* Keybinds grid */
+        #keybinds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+        
+        .keybind-card {
+            border: 1px solid var(--primary);
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .keybind-card:hover {
+            background-color: rgba(0, 255, 170, 0.1);
+        }
+        
+        .key {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Ghost presses */
+        #ghost-presses {
+            padding: 2rem;
+        }
+        
+        .press-entry {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 0;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        
+        .press-time {
+            color: var(--secondary);
+            margin-right: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #terminal {
+                padding: 1rem;
+            }
+            
+            #keybinds-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="keyboard-bg"></div>
+    
+    <div id="ghost-hands"></div>
+    
+<div id="welcome-screen">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; max-width: 800px;">
+        <!-- Logo -->
+        <img src="keybind-coin-logo.png" alt="Keybind Coin Logo" style="width: 250px; height: 250px; margin-bottom: 2rem;">
+        
+        <h1 style="color: var(--primary); margin-bottom: 1.5rem; font-size: 2.5rem; letter-spacing: 0.1em;">KEYBIND COIN</h1>
+        
+        <p style="margin-bottom: 2.5rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+            The coin that was never meant to be pressed.<br>
+            A fragment of shortcuts forgotten.<br>
+            A mirror of triggers once forbidden.
+        </p>
+        
+        <!-- Twitter Link -->
+        <div style="margin-bottom: 2rem;">
+            <a href="https://twitter.com/keybindcoin" target="_blank" 
+               style="color: var(--secondary); text-decoration: none; display: inline-flex; align-items: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+                @keybindcoin
+            </a>
+        </div>
+        
+        <!-- Start Prompt -->
+        <div style="margin-bottom: 1rem;">
+            <span class="cursor"></span>
+            <span style="margin-left: 0.5rem;">Press any key to begin</span>
+        </div>
+    </div>
+</div>
+    
+    <div id="terminal" class="hidden">
+        <div id="output">
+            <div class="response">
+                KEYBIND COIN v1.0.0<br>
+                Type 'help' for available commands<br><br>
+            </div>
+        </div>
+        <div id="input-line">
+            <span id="prompt">></span>
+            <input type="text" id="command-input" autofocus>
+        </div>
+    </div>
+    
+    <div id="keybinds-view" class="hidden">
+        <div style="position: absolute; top: 1rem; right: 1rem; z-index: 100;">
+            <button id="close-keybinds" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1rem; cursor: pointer;">CLOSE</button>
+        </div>
+        <div id="keybinds-grid">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+    
+    <div id="ghost-presses-view" class="hidden">
+        <div style="position: absolute; top: 1rem; right: 1rem; z-index: 100;">
+            <button id="close-ghost" style="background: none; border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1rem; cursor: pointer;">CLOSE</button>
+        </div>
+        <div id="ghost-presses">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+    
+    <div class="bind-menu hidden">
+        <h3 class="bind-menu-title">CHOOSE YOUR BINDING</h3>
+        <div class="bind-option" data-bind="ctrl">CTRL COIN → Dark mode explosion</div>
+        <div class="bind-option" data-bind="alt">ALT MEME → Random meme artifact overlay</div>
+        <div class="bind-option" data-bind="shift">SHIFT REALITY → Warps background geometry</div>
+    </div>
+    
+    <!-- Effect elements -->
+    <div class="dark-explosion hidden"></div>
+    <div class="meme-overlay hidden"></div>
+    <div class="geometry-warp hidden"></div>
+    
+    <script>
+        // State management
+        const state = {
+            activeView: 'welcome',
+            commandHistory: [],
+            historyIndex: -1,
+            ghostHandsTimeout: null
+        };
+        
+        // Keybind definitions
+        const keybinds = [
+            { key: 'ESC', definition: "Exit from expectations." },
+            { key: 'TAB', definition: "Move forward without control." },
+            { key: 'DEL', definition: "Erase what never existed." },
+            { key: 'ENTER', definition: "Commit to the void." },
+            { key: 'SPACE', definition: "The canvas of potential." },
+            { key: 'CTRL', definition: "Master of puppets." },
+            { key: 'ALT', definition: "Alternative paths diverge." },
+            { key: 'SHIFT', definition: "Elevate perspective." },
+            { key: 'CAPS', definition: "Shouting into the abyss." },
+            { key: 'F1', definition: "Help that never comes." },
+            { key: 'F5', definition: "Refresh the illusion." },
+            { key: 'F12', definition: "Developer's remorse." }
+        ];
+        
+        // Ghost press data
+        const ghostPresses = [
+            { user: '0xA8', key: '[F13]', message: 'Unknown Bind Detected' },
+            { user: '0x2F', key: '[CTRL+ALT+∞]', message: 'Reality breach attempted' },
+            { user: '0x9C', key: '[ESC]', message: 'Escape sequence initiated' },
+            { user: '0xE1', key: '[SHIFT+Q]', message: 'Quantum shift detected' },
+            { user: '0x4D', key: '[F5]', message: 'Refresh requested' },
+            { user: '0xB3', key: '[ALT+F4]', message: 'Classic maneuver' },
+            { user: '0x7E', key: '[WIN+DEL]', message: 'System override attempt' },
+            { user: '0x11', key: '[CTRL+Z]', message: 'Undo requested' },
+            { user: '0x5A', key: '[F8]', message: 'Safe mode engaged' },
+            { user: '0xC4', key: '[PRTSC]', message: 'Reality captured' }
+        ];
+        
+        // Meme images
+        const memeImages = [
+            'https://i.imgur.com/J5ZQZ9q.png',
+            'https://i.imgur.com/9Q9QZ9q.png',
+            'https://i.imgur.com/8Q8QZ9q.png',
+            'https://i.imgur.com/7Q7QZ9q.png',
+            'https://i.imgur.com/6Q6QZ9q.png'
+        ];
+        
+        // DOM elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const terminal = document.getElementById('terminal');
+        const output = document.getElementById('output');
+        const commandInput = document.getElementById('command-input');
+        const keybindsView = document.getElementById('keybinds-view');
+        const ghostPressesView = document.getElementById('ghost-presses-view');
+        const bindMenu = document.querySelector('.bind-menu');
+        const darkExplosion = document.querySelector('.dark-explosion');
+        const memeOverlay = document.querySelector('.meme-overlay');
+        const geometryWarp = document.querySelector('.geometry-warp');
+        const ghostHands = document.getElementById('ghost-hands');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up keybinds grid
+            const grid = document.getElementById('keybinds-grid');
+            keybinds.forEach(bind => {
+                const card = document.createElement('div');
+                card.className = 'keybind-card';
+                card.innerHTML = `
+                    <div class="key">[${bind.key}]</div>
+                    <div class="definition">${bind.definition}</div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            // Set up ghost presses
+            const pressesContainer = document.getElementById('ghost-presses');
+            ghostPresses.forEach(press => {
+                const entry = document.createElement('div');
+                entry.className = 'press-entry';
+                entry.innerHTML = `
+                    <span class="press-time">[${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}]</span>
+                    <span class="press-user">User ${press.user} pressed ${press.key} — ${press.message}</span>
+                `;
+                pressesContainer.appendChild(entry);
+            });
+            
+            // Set up event listeners
+            document.addEventListener('keydown', handleGlobalKeyDown);
+            commandInput.addEventListener('keydown', handleCommandInput);
+            document.querySelectorAll('.bind-option').forEach(option => {
+                option.addEventListener('click', handleBindOptionClick);
+            });
+            document.getElementById('close-keybinds').addEventListener('click', () => {
+                keybindsView.classList.add('hidden');
+                terminal.classList.remove('hidden');
+                commandInput.focus();
+            });
+            document.getElementById('close-ghost').addEventListener('click', () => {
+                ghostPressesView.classList.add('hidden');
+                terminal.classList.remove('hidden');
+                commandInput.focus();
+            });
+            
+            // Start ghost hands animation
+            startGhostHands();
+        });
+        
+        // Global key handler
+        function handleGlobalKeyDown(e) {
+            if (state.activeView === 'welcome') {
+                welcomeScreen.classList.add('hidden');
+                terminal.classList.remove('hidden');
+                state.activeView = 'terminal';
+                commandInput.focus();
+                return;
+            }
+            
+            // Special key effects
+            switch(e.key.toUpperCase()) {
+                case 'E':
+                    addCommandOutput('> Execute Protocol E', 'Escape reality sequence initiated...');
+                    break;
+                case 'R':
+                    document.body.classList.add('rotate-effect');
+                    setTimeout(() => {
+                        document.body.classList.remove('rotate-effect');
+                    }, 1000);
+                    addCommandOutput('> Rotate command', 'Screen orientation altered temporarily');
+                    break;
+                case 'Q':
+                    document.body.classList.toggle('silence-mode');
+                    const status = document.body.classList.contains('silence-mode') ? 'activated' : 'deactivated';
+                    addCommandOutput('> Silence mode', `Silence mode ${status}`);
+                    break;
+                case ' ':
+                    if (state.activeView === 'terminal') {
+                        e.preventDefault();
+                        showBindMenu();
+                    }
+                    break;
+            }
+        }
+        
+        // Command input handler
+        function handleCommandInput(e) {
+            if (e.key === 'Enter') {
+                const command = commandInput.value.trim();
+                commandInput.value = '';
+                
+                if (command) {
+                    state.commandHistory.push(command);
+                    state.historyIndex = state.commandHistory.length;
+                    
+                    addCommandOutput(`> ${command}`, processCommand(command));
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (state.commandHistory.length > 0) {
+                    if (state.historyIndex > 0) {
+                        state.historyIndex--;
+                    }
+                    commandInput.value = state.commandHistory[state.historyIndex] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (state.historyIndex < state.commandHistory.length - 1) {
+                    state.historyIndex++;
+                    commandInput.value = state.commandHistory[state.historyIndex] || '';
+                } else {
+                    state.historyIndex = state.commandHistory.length;
+                    commandInput.value = '';
+                }
+            }
+        }
+        
+        // Process commands
+        function processCommand(command) {
+            const cmd = command.toLowerCase();
+            
+            if (cmd === 'help') {
+                return `Available commands:
+help - Show this help message
+clear - Clear the terminal
+bind /lore - Access the Keybind Coin lore
+keybinds - View all keybind definitions
+ghostpresses - View recent keypress activity
+`;
+            } else if (cmd === 'clear') {
+                output.innerHTML = '';
+                return '';
+            } else if (cmd === 'bind /lore') {
+                return `Binding lore initiated...
+Loading...
+The coin that was never meant to be pressed. A fragment of shortcuts forgotten. A mirror of triggers once forbidden.
+Created from the remnants of abandoned interfaces, the Keybind Coin exists between keystrokes, in the microseconds between press and release. It is both the shortcut and the destination, the command and the output.
+`;
+            } else if (cmd === 'keybinds') {
+                terminal.classList.add('hidden');
+                keybindsView.classList.remove('hidden');
+                return 'Opening keybinds repository...';
+            } else if (cmd === 'ghostpresses') {
+                terminal.classList.add('hidden');
+                ghostPressesView.classList.remove('hidden');
+                return 'Accessing ghost press logs...';
+            } else {
+                return `Command not recognized: ${command}
+Type 'help' for available commands`;
+            }
+        }
+        
+        // Add command output to terminal
+        function addCommandOutput(command, response) {
+            const commandElement = document.createElement('div');
+            commandElement.className = 'command';
+            commandElement.textContent = command;
+            output.appendChild(commandElement);
+            
+            if (response) {
+                const responseElement = document.createElement('div');
+                responseElement.className = 'response';
+                responseElement.textContent = response;
+                output.appendChild(responseElement);
+            }
+            
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Show bind menu
+        function showBindMenu() {
+            bindMenu.classList.remove('hidden');
+        }
+        
+        // Handle bind menu options
+        function handleBindOptionClick(e) {
+            const bindType = e.target.getAttribute('data-bind');
+            bindMenu.classList.add('hidden');
+            
+            switch(bindType) {
+                case 'ctrl':
+                    // Dark explosion effect
+                    darkExplosion.classList.remove('hidden');
+                    darkExplosion.style.opacity = '0.8';
+                    setTimeout(() => {
+                        darkExplosion.style.opacity = '0';
+                        setTimeout(() => {
+                            darkExplosion.classList.add('hidden');
+                        }, 1000);
+                    }, 500);
+                    addCommandOutput('> CTRL COIN', 'Dark mode explosion initiated');
+                    break;
+                case 'alt':
+                    // Random meme overlay
+                    const randomMeme = memeImages[Math.floor(Math.random() * memeImages.length)];
+                    memeOverlay.style.backgroundImage = `url(${randomMeme})`;
+                    memeOverlay.classList.remove('hidden');
+                    memeOverlay.style.opacity = '0.7';
+                    setTimeout(() => {
+                        memeOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            memeOverlay.classList.add('hidden');
+                        }, 500);
+                    }, 1500);
+                    addCommandOutput('> ALT MEME', 'Meme artifact summoned');
+                    break;
+                case 'shift':
+                    // Geometry warp
+                    geometryWarp.classList.remove('hidden');
+                    geometryWarp.style.opacity = '1';
+                    setTimeout(() => {
+                        geometryWarp.style.backgroundSize = '20px 20px';
+                    }, 100);
+                    setTimeout(() => {
+                        geometryWarp.style.opacity = '0';
+                        setTimeout(() => {
+                            geometryWarp.classList.add('hidden');
+                            geometryWarp.style.backgroundSize = '100px 100px';
+                        }, 1000);
+                    }, 1500);
+                    addCommandOutput('> SHIFT REALITY', 'Background geometry altered');
+                    break;
+            }
+        }
+        
+        // Ghost hands animation
+        function startGhostHands() {
+            const phrases = [
+                "ESC ESC ESC",
+                "CTRL+ALT+DEL",
+                "F5 F5 F5",
+                ":wq",
+                "git push --force",
+                "rm -rf /",
+                "ALT+F4",
+                "sudo make me a sandwich"
+            ];
+            
+            function showNextPhrase() {
+                const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+                ghostHands.textContent = phrase;
+                ghostHands.style.opacity = '1';
+                
+                // Random position
+                ghostHands.style.left = `${10 + Math.random() * 80}%`;
+                ghostHands.style.top = `${10 + Math.random() * 80}%`;
+                
+                // Type animation
+                let i = 0;
+                const typing = setInterval(() => {
+                    ghostHands.textContent = phrase.substring(0, i);
+                    i++;
+                    if (i > phrase.length) {
+                        clearInterval(typing);
+                        setTimeout(() => {
+                            ghostHands.style.opacity = '0';
+                            state.ghostHandsTimeout = setTimeout(showNextPhrase, 3000 + Math.random() * 7000);
+                        }, 1000);
+                    }
+                }, 100);
+            }
+            
+            state.ghostHandsTimeout = setTimeout(showNextPhrase, 3000);
+        }
+    </script>
+</body>
+</html>

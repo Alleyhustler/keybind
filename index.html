@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KEYBIND COIN</title>
+    <title>BLACK INPUT</title>
     <style>
         :root {
             --primary: #00ffaa;
@@ -283,9 +283,9 @@
 <div id="welcome-screen">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; max-width: 800px;">
         <!-- Logo -->
-        <img src="_-removebg-preview.png" alt="Keybind Coin Logo" style="width: 250px; height: 250px; margin-bottom: 2rem;">
+        <img src="THE_WHITE_NET-removebg-preview.png" alt="Black Input Logo" style="width: 250px; height: 250px; margin-bottom: 2rem;">
         
-        <h1 style="color: var(--primary); margin-bottom: 1.5rem; font-size: 2.5rem; letter-spacing: 0.1em;">KEYBIND COIN</h1>
+        <h1 style="color: var(--primary); margin-bottom: 1.5rem; font-size: 2.5rem; letter-spacing: 0.1em;">BLACK INPUT</h1>
         
         <p style="margin-bottom: 2.5rem; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
             The coin that was never meant to be pressed.<br>
@@ -295,12 +295,12 @@
         
         <!-- Twitter Link -->
         <div style="margin-bottom: 2rem;">
-            <a href="https://twitter.com/keybindcoin" target="_blank" 
+            <a href="https://twitter.com/blackinput" target="_blank" 
                style="color: var(--secondary); text-decoration: none; display: inline-flex; align-items: center;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                 </svg>
-                @keybindcoin
+                @blackinput
             </a>
         </div>
         
@@ -315,7 +315,7 @@
     <div id="terminal" class="hidden">
         <div id="output">
             <div class="response">
-                KEYBIND COIN v1.0.0<br>
+                BLACK INPUT v1.0.0<br>
                 Type 'help' for available commands<br><br>
             </div>
         </div>
@@ -345,7 +345,7 @@
     
     <div class="bind-menu hidden">
         <h3 class="bind-menu-title">CHOOSE YOUR BINDING</h3>
-        <div class="bind-option" data-bind="ctrl">CTRL COIN → Dark mode explosion</div>
+        <div class="bind-option" data-bind="ctrl">CTRL INPUT → Dark mode explosion</div>
         <div class="bind-option" data-bind="alt">ALT MEME → Random meme artifact overlay</div>
         <div class="bind-option" data-bind="shift">SHIFT REALITY → Warps background geometry</div>
     </div>
@@ -539,7 +539,7 @@
                 return `Available commands:
 help - Show this help message
 clear - Clear the terminal
-bind /lore - Access the Keybind Coin lore
+bind /lore - Access the Black Input lore
 keybinds - View all keybind definitions
 ghostpresses - View recent keypress activity
 `;
@@ -550,7 +550,7 @@ ghostpresses - View recent keypress activity
                 return `Binding lore initiated...
 Loading...
 The coin that was never meant to be pressed. A fragment of shortcuts forgotten. A mirror of triggers once forbidden.
-Created from the remnants of abandoned interfaces, the Keybind Coin exists between keystrokes, in the microseconds between press and release. It is both the shortcut and the destination, the command and the output.
+Created from the remnants of abandoned interfaces, Black Input exists between keystrokes, in the microseconds between press and release. It is both the shortcut and the destination, the command and the output.
 `;
             } else if (cmd === 'keybinds') {
                 terminal.classList.add('hidden');
@@ -604,7 +604,7 @@ Type 'help' for available commands`;
                             darkExplosion.classList.add('hidden');
                         }, 1000);
                     }, 500);
-                    addCommandOutput('> CTRL COIN', 'Dark mode explosion initiated');
+                    addCommandOutput('> CTRL INPUT', 'Dark mode explosion initiated');
                     break;
                 case 'alt':
                     // Random meme overlay
